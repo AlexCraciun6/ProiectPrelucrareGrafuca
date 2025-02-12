@@ -134,10 +134,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="glm\detail\glm.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model3D.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
+    <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="tiny_obj_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.hpp" />
     <ClInclude Include="glm\common.hpp" />
     <ClInclude Include="glm\detail\compute_common.hpp" />
     <ClInclude Include="glm\detail\compute_vector_decl.hpp" />
@@ -426,6 +434,12 @@
     <ClInclude Include="glm\vec3.hpp" />
     <ClInclude Include="glm\vec4.hpp" />
     <ClInclude Include="glm\vector_relational.hpp" />
+    <ClInclude Include="Mesh.hpp" />
+    <ClInclude Include="Model3D.hpp" />
+    <ClInclude Include="Shader.hpp" />
+    <ClInclude Include="SkyBox.hpp" />
+    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glm\detail\func_common.inl" />

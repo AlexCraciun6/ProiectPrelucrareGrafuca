@@ -1,0 +1,14 @@
+# Blender 4.2.3 LTS MTL File: 'None'
+# www.blender.org
+
+newmtl zhiguli_blue
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd zhiguli_albedo_blue.png
+map_Ns zhiguli_roughness.png
+map_refl zhiguli_metallic.png
+map_Bump -bm 1.000000 zhiguli_normal.png
