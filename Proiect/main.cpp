@@ -116,12 +116,31 @@ void windowResizeCallback(GLFWwindow* window, int width, int height) {
 	projection = glm::perspective(glm::radians(45.0f), (float)retina_width / (float)retina_height, 0.1f, 1000.0f);
 }
 
+int representation = 0;
+
+void switchSceneRepresentation() {
+	representation = (representation + 1) % 3;
+
+	if (representation == 0) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	else if (representation == 1) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+	}
+}
+
 void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
 	if (key == GLFW_KEY_M && action == GLFW_PRESS)
 		showDepthMap = !showDepthMap;
+
+	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+		switchSceneRepresentation();
 
 	if (key >= 0 && key < 1024)
 	{
