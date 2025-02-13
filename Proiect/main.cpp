@@ -39,6 +39,7 @@ const unsigned int SHADOW_HEIGHT = 4096;
 
 glm::mat4 model;
 GLuint modelLoc;
+
 glm::mat4 view;
 GLuint viewLoc;
 glm::mat4 projection;
@@ -86,6 +87,18 @@ GLuint textureID;
 
 gps::SkyBox mySkyBox;
 gps::Shader skyboxShader;
+
+//animatie balon
+// blender = (25, 0, 17) -> openGL = (25, 17, 0)
+glm::vec3 balonPosition = glm::vec3(25.0f, 17.0f, 0.0f);
+float balonAngle = 0.0f;
+float balonHeight = 0.0f; 
+
+//animatie masina 1
+float carPosition = 0.0f;
+float carSpeed = 0.1f;
+// blender = (-7, 35, 
+glm::vec3 masinaPosition = glm::vec3(-7.0f, 35.0f, 0.0f);
 
 GLenum glCheckError_(const char *file, int line) {
 	GLenum errorCode;
@@ -470,10 +483,27 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 	model = glm::scale(model, glm::vec3(0.5f));
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-	//ground.Draw(shader);	
+	//ground.Draw(shader);
 	scena.Draw(shader);
-	balon.Draw(shader);
+
+	carPosition += carSpeed;  // Mașina se mișcă în jos (Y scade)
+
+	// Verifică dacă a ajuns la limita de jos
+	if (carPosition >= 65.0f) {
+		carPosition = 0.0f;  // Reset la poziția inițială
+	}
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, carPosition));
+	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	masina.Draw(shader);
+
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -carPosition));
+
+	balonAngle += 0.2f;
+	balonHeight = sin(glfwGetTime() * 0.5f) * 7.0f;
+	model = glm::translate(model, glm::vec3(0.0f, balonHeight, 0.0f));
+	model = glm::rotate(model, glm::radians(balonAngle), glm::vec3(0.0f, 1.0f, 0.0f)); 
+	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));	
+	balon.Draw(shader);
 }
 
 void renderScene() {
