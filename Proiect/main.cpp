@@ -34,8 +34,8 @@ int glWindowHeight = 600;
 int retina_width, retina_height;
 GLFWwindow* glWindow = NULL;
 
-const unsigned int SHADOW_WIDTH = 2048;
-const unsigned int SHADOW_HEIGHT = 2048;
+const unsigned int SHADOW_WIDTH = 4096;
+const unsigned int SHADOW_HEIGHT = 4096;
 
 glm::mat4 model;
 GLuint modelLoc;
@@ -440,14 +440,15 @@ void initFBO() {
 }
 
 glm::mat4 computeLightSpaceTrMatrix() {
-	//TODO - Return the light-space transformation matrix
+	// Return the light-space transformation matrix
 	glm::mat4 lightView = glm::lookAt(lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	const GLfloat near_plane = 0.1f, far_plane = 6.0f;
-	glm::mat4 lightProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, near_plane, far_plane);
+
+	const GLfloat near_plane = -20.0f, far_plane = 25.0f;
+
+	glm::mat4 lightProjection = glm::ortho(-25.0f, 25.0f, -22.0f, 22.0f, near_plane, far_plane);
+
 	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
 	return lightSpaceTrMatrix;
-	
-	//return glm::mat4(1.0f);
 }
 
 void drawObjects(gps::Shader shader, bool depthPass) {
