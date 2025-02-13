@@ -23,6 +23,7 @@
 
 #include "Shader.hpp"
 #include "Model3D.hpp"
+
 #include "Camera.hpp"
 #include "SkyBox.hpp"
 
@@ -235,10 +236,19 @@ void processMovement()
 		myCamera.move(gps::MOVE_RIGHT, cameraSpeed);		
 	}
 
+	if (pressedKeys[GLFW_KEY_SPACE]) {
+		myCamera.move(gps::MOVE_UP, cameraSpeed);
+	}
+
+	if (pressedKeys[GLFW_KEY_LEFT_SHIFT]) {
+		myCamera.move(gps::MOVE_DOWN, cameraSpeed);
+	}
+
 	//fullscreen
 	if (pressedKeys[GLFW_KEY_F]) {
 		toggleFullscreen();
 	}
+
 }
 
 bool initOpenGLWindow()
