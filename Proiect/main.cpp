@@ -474,17 +474,12 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 		glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 	}
 	
-	model = glm::rotate(glm::mat4(1.0f), glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::mat4(1.0f);
+	model = glm::rotate(model, glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(1.5f));
+	model = glm::translate(model, glm::vec3(0.0f, 1.1f, 0.0f));
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
 	nanosuit.Draw(shader);
-
-	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.5f));
-	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-	//ground.Draw(shader);
-	scena.Draw(shader);
 
 	carPosition += carSpeed;  // Mașina se mișcă în jos (Y scade)
 
@@ -492,18 +487,22 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 	if (carPosition >= 65.0f) {
 		carPosition = 0.0f;  // Reset la poziția inițială
 	}
+	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, carPosition));
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	masina.Draw(shader);
 
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -carPosition));
-
 	balonAngle += 0.2f;
 	balonHeight = sin(glfwGetTime() * 0.5f) * 7.0f;
+	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, balonHeight, 0.0f));
 	model = glm::rotate(model, glm::radians(balonAngle), glm::vec3(0.0f, 1.0f, 0.0f)); 
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));	
 	balon.Draw(shader);
+
+	model = glm::mat4(1.0f);
+	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	scena.Draw(shader);
 }
 
 void renderScene() {
