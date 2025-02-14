@@ -71,6 +71,7 @@ gps::Model3D screenQuad;
 gps::Model3D scena;
 gps::Model3D balon;
 gps::Model3D masina;
+gps::Model3D masina2;
 
 gps::Shader myCustomShader;
 gps::Shader lightShader;
@@ -99,6 +100,11 @@ float carPosition = 0.0f;
 float carSpeed = 0.1f;
 // blender = (-7, 35, 
 glm::vec3 masinaPosition = glm::vec3(-7.0f, 35.0f, 0.0f);
+
+//animatie masina 2
+//blender = (45,7,0.1) + rotate pe y cu -90
+float carPosition2 = 0.0f;
+float carSpeed2 = 0.3f;
 
 GLenum glCheckError_(const char *file, int line) {
 	GLenum errorCode;
@@ -363,6 +369,7 @@ void initObjects() {
 	scena.LoadModel("objects/scena/scena.obj");
 	balon.LoadModel("objects/balon/balon.obj");
 	masina.LoadModel("objects/masina/masina.obj");
+	masina2.LoadModel("objects/masina2/masina2.obj");
 
 
 	// New skybox initialization
@@ -491,6 +498,17 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, carPosition));
 	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	masina.Draw(shader);
+
+	carPosition2 -= carSpeed2;  // Mașina se mișcă în jos (Y scade)
+
+	// Verifică dacă a ajuns la limita de jos
+	if (carPosition2 <= -65.0f) {
+		carPosition2 = 0.0f;  // Reset la poziția inițială
+	}
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(carPosition2, 0.0f, 0.0f));
+	glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	masina2.Draw(shader);
 
 	balonAngle += 0.2f;
 	balonHeight = sin(glfwGetTime() * 0.5f) * 7.0f;
