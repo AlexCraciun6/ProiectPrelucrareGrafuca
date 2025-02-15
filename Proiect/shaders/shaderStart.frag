@@ -23,6 +23,9 @@ vec3 specular;
 float specularStrength = 0.5f;
 float shininess = 32.0f;
 
+//fog
+uniform float fogDensityFactor;
+
 void computeLightComponents()
 {		
 	vec3 cameraPosEye = vec3(0.0f);//in eye coordinates, the viewer is situated at the origin
@@ -66,20 +69,27 @@ float computeShadow()
 	return shadow;
 }
 
+float fog() {
+    //float fogDensity = 0.01f; // for testing
+    float fragmentDistance = length(fPosEye);
+    float fogFactor = exp(-fragmentDistance * fogDensityFactor);
+    return clamp(fogFactor, 0.0f, 1.0f);
+}
+
 void main() 
 {
 	computeLightComponents();
-	
-	vec3 baseColor = vec3(0.9f, 0.35f, 0.0f);//orange
 	
 	ambient *= texture(diffuseTexture, fTexCoords).rgb;
 	diffuse *= texture(diffuseTexture, fTexCoords).rgb;
 	specular *= texture(specularTexture, fTexCoords).rgb;
 
 	float shadow = computeShadow();
-	vec3 color = min((ambient + (1.0f - shadow)*diffuse) + (1.0f - shadow)*specular, 1.0f);
+    //vec3 color = min((ambient + (1.0f - shadow)*diffuse) + (1.0f - shadow)*specular, 1.0f);
+    float alpha = texture(diffuseTexture, fTexCoords).a;
+	vec4 color = vec4( min((ambient + (1.0f - shadow) * diffuse) + (1.0f - shadow)*specular, 1.0f), alpha);
 
-	//vec3 color = min((ambient + diffuse) + specular, 1.0f);
-    
-    fColor = vec4(color, 1.0f);
+	vec4 fogColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+	float fogFactor = fog();
+	fColor = mix(color, fogColor, 1.0 - fogFactor);
 }

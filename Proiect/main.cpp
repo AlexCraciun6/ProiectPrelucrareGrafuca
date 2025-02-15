@@ -108,6 +108,11 @@ glm::vec3 masinaPosition = glm::vec3(-7.0f, 35.0f, 0.0f);
 float carPosition2 = 0.0f;
 float carSpeed2 = 0.3f;
 
+float fogDensityFactor = 0.01f;
+const float MIN_FOG = 0.001f;
+const float MAX_FOG = 0.05f;
+const float FOG_STEP = 0.001f;
+
 struct RainParticle {
 	glm::vec3 position;
 	glm::vec3 velocity;
@@ -362,6 +367,15 @@ void processMovement()
 	if (pressedKeys[GLFW_KEY_LEFT_SHIFT]) {
 		myCamera.move(gps::MOVE_DOWN, cameraSpeed);
 	}
+
+	//fog
+	if (pressedKeys[GLFW_KEY_C]) {
+		fogDensityFactor = glm::min(fogDensityFactor + FOG_STEP, MAX_FOG);
+	}
+
+	if (pressedKeys[GLFW_KEY_X]) {
+		fogDensityFactor = glm::max(fogDensityFactor - FOG_STEP, MIN_FOG);
+	}
 }
 
 bool initOpenGLWindow()
@@ -510,6 +524,9 @@ void initUniforms() {
 
 	lightShader.useShaderProgram();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	//fog
+	glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "fogDensityFactor"), fogDensityFactor);
 }
 
 void initFBO() {
@@ -667,6 +684,9 @@ void renderScene() {
 
 		drawObjects(myCustomShader, false);
 
+		//fog
+		glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "fogDensityFactor"), fogDensityFactor);
+
 		//draw a white cube around the light
 		lightShader.useShaderProgram();
 
@@ -683,7 +703,6 @@ void renderScene() {
 		renderRain();
 
 		glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
-
 		mySkyBox.Draw(skyboxShader, skyboxView, projection);
 	}
 }
