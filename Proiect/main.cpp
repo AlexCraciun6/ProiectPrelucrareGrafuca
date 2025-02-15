@@ -34,6 +34,7 @@ int glWindowHeight = 600;
 int retina_width, retina_height;
 GLFWwindow* glWindow = NULL;
 
+// a higher value will result in a more detailed shadow map
 const unsigned int SHADOW_WIDTH = 4096;
 const unsigned int SHADOW_HEIGHT = 4096;
 
@@ -463,9 +464,10 @@ glm::mat4 computeLightSpaceTrMatrix() {
 	// Return the light-space transformation matrix
 	glm::mat4 lightView = glm::lookAt(lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	const GLfloat near_plane = -20.0f, far_plane = 25.0f;
+	const GLfloat near_plane = -50.0f, far_plane = 50.0f;
 
-	glm::mat4 lightProjection = glm::ortho(-25.0f, 25.0f, -22.0f, 22.0f, near_plane, far_plane);
+	//                                     stanga  dreapta  jos    sus
+	glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -40.0f, 40.0f, near_plane, far_plane);
 
 	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
 	return lightSpaceTrMatrix;
