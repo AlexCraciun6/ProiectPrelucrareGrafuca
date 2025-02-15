@@ -23,11 +23,12 @@
 
 #include "Shader.hpp"
 #include "Model3D.hpp"
-
 #include "Camera.hpp"
 #include "SkyBox.hpp"
 
 #include <iostream>
+#include <random>
+#include <vector>
 
 int glWindowWidth = 800;
 int glWindowHeight = 600;
@@ -107,6 +108,82 @@ glm::vec3 masinaPosition = glm::vec3(-7.0f, 35.0f, 0.0f);
 float carPosition2 = 0.0f;
 float carSpeed2 = 0.3f;
 
+struct RainParticle {
+	glm::vec3 position;
+	glm::vec3 velocity;
+	float randomOffset;  // Add random offset for varied falling
+};
+
+const int NUM_PARTICLES = 5000;
+std::vector<RainParticle> rainParticles;
+GLuint rainVBO, rainVAO;
+gps::Shader rainShader;
+bool showRain = false;
+float lastFrame = 0.0f;
+
+void initRain() {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> xDist(-500.0f, 500.0f);
+	std::uniform_real_distribution<float> yDist(0.0f, 500.0f);
+	std::uniform_real_distribution<float> zDist(-500.0f, 500.0f);
+	std::uniform_real_distribution<float> randomOffset(0.0f, 100.0f);  // Random offset for varied falling
+
+	rainParticles.resize(NUM_PARTICLES);
+	for (auto& particle : rainParticles) {
+		// Random starting position
+		particle.position = glm::vec3(xDist(gen), yDist(gen), zDist(gen));
+		// Add slight random horizontal movement
+		float randX = (gen() % 100) / 1000.0f - 0.05f;
+		float randZ = (gen() % 100) / 1000.0f - 0.05f;
+		particle.velocity = glm::vec3(randX, -1.0f, randZ);
+		particle.randomOffset = randomOffset(gen);
+	}
+
+	// Create and bind VAO
+	glGenVertexArrays(1, &rainVAO);
+	glBindVertexArray(rainVAO);
+
+	// Create and bind VBO
+	glGenBuffers(1, &rainVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, rainVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(RainParticle) * NUM_PARTICLES, rainParticles.data(), GL_DYNAMIC_DRAW);
+
+	// Set vertex attributes
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(RainParticle), (void*)0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(RainParticle), (void*)offsetof(RainParticle, velocity));
+
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(RainParticle), (void*)offsetof(RainParticle, randomOffset));
+}
+
+// Add this function to render rain
+void renderRain() {
+	if (!showRain) return;
+
+	float currentFrame = glfwGetTime();
+	float deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+
+	// Update and render particles
+	rainShader.useShaderProgram();
+	glUniformMatrix4fv(glGetUniformLocation(rainShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(glGetUniformLocation(rainShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(rainShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniform1f(glGetUniformLocation(rainShader.shaderProgram, "deltaTime"), deltaTime);
+	glUniform1f(glGetUniformLocation(rainShader.shaderProgram, "currentTime"), currentFrame);
+
+	glBindVertexArray(rainVAO);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_PROGRAM_POINT_SIZE);
+	glDrawArrays(GL_POINTS, 0, NUM_PARTICLES);
+	glDisable(GL_PROGRAM_POINT_SIZE);
+}
+
 GLenum glCheckError_(const char *file, int line) {
 	GLenum errorCode;
 	while ((errorCode = glGetError()) != GL_NO_ERROR)
@@ -128,7 +205,6 @@ GLenum glCheckError_(const char *file, int line) {
 
 void windowResizeCallback(GLFWwindow* window, int width, int height) {
 	fprintf(stdout, "window resized to width: %d , and height: %d\n", width, height);
-	//TODO
 	glWindowWidth = width;
 	glWindowHeight = height;
 	glfwGetFramebufferSize(glWindow, &retina_width, &retina_height);
@@ -152,6 +228,41 @@ void switchSceneRepresentation() {
 	}
 }
 
+bool isFullscreen = false;
+GLFWmonitor* primaryMonitor = NULL;
+int windowedWidth, windowedHeight, windowedPosX, windowedPosY;
+
+void toggleFullscreen() {
+	if (!isFullscreen) {
+		// Store current windowed mode parameters
+		glfwGetWindowPos(glWindow, &windowedPosX, &windowedPosY);
+		glfwGetWindowSize(glWindow, &windowedWidth, &windowedHeight);
+
+		// Get primary monitor
+		primaryMonitor = glfwGetPrimaryMonitor();
+
+		// Get video mode of primary monitor
+		const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+
+		// Switch to fullscreen
+		glfwSetWindowMonitor(glWindow, primaryMonitor,
+			0, 0,
+			mode->width, mode->height,
+			mode->refreshRate);
+
+		isFullscreen = true;
+	}
+	else {
+		// Switch back to windowed mode
+		glfwSetWindowMonitor(glWindow, NULL,
+			windowedPosX, windowedPosY,
+			windowedWidth, windowedHeight,
+			0);
+
+		isFullscreen = false;
+	}
+}
+
 void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
@@ -161,6 +272,12 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 
 	if (key == GLFW_KEY_R && action == GLFW_PRESS)
 		switchSceneRepresentation();
+
+	if (key == GLFW_KEY_F && action == GLFW_PRESS)
+		toggleFullscreen();
+
+	if (key == GLFW_KEY_P && action == GLFW_PRESS)
+		showRain = !showRain;
 
 	if (key >= 0 && key < 1024)
 	{
@@ -204,43 +321,6 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	myCamera.rotate(pitch, yaw);
 }
 
-//
-bool isFullscreen = false;
-GLFWmonitor* primaryMonitor = NULL;
-int windowedWidth, windowedHeight, windowedPosX, windowedPosY;
-
-void toggleFullscreen() {
-	if (!isFullscreen) {
-		// Store current windowed mode parameters
-		glfwGetWindowPos(glWindow, &windowedPosX, &windowedPosY);
-		glfwGetWindowSize(glWindow, &windowedWidth, &windowedHeight);
-
-		// Get primary monitor
-		primaryMonitor = glfwGetPrimaryMonitor();
-
-		// Get video mode of primary monitor
-		const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
-
-		// Switch to fullscreen
-		glfwSetWindowMonitor(glWindow, primaryMonitor,
-			0, 0,
-			mode->width, mode->height,
-			mode->refreshRate);
-
-		isFullscreen = true;
-	}
-	else {
-		// Switch back to windowed mode
-		glfwSetWindowMonitor(glWindow, NULL,
-			windowedPosX, windowedPosY,
-			windowedWidth, windowedHeight,
-			0);
-
-		isFullscreen = false;
-	}
-}
-//
-
 void processMovement()
 {
 	if (pressedKeys[GLFW_KEY_Q]) {
@@ -282,12 +362,6 @@ void processMovement()
 	if (pressedKeys[GLFW_KEY_LEFT_SHIFT]) {
 		myCamera.move(gps::MOVE_DOWN, cameraSpeed);
 	}
-
-	//fullscreen
-	if (pressedKeys[GLFW_KEY_F]) {
-		toggleFullscreen();
-	}
-
 }
 
 bool initOpenGLWindow()
@@ -364,7 +438,6 @@ void initOpenGLState()
 
 void initObjects() {
 	nanosuit.LoadModel("objects/nanosuit/nanosuit.obj");
-	//ground.LoadModel("objects/ground/ground.obj");
 	lightCube.LoadModel("objects/cube/cube.obj");
 	screenQuad.LoadModel("objects/quad/quad.obj");
 	scena.LoadModel("objects/scena/scena.obj");
@@ -396,6 +469,9 @@ void initShaders() {
 	screenQuadShader.useShaderProgram();
 	depthMapShader.loadShader("shaders/depthMapShader.vert", "shaders/depthMapShader.frag");
 	depthMapShader.useShaderProgram();
+	//rain
+	rainShader.loadShader("shaders/rainShader.vert", "shaders/rainShader.frag");
+	rainShader.useShaderProgram();
 
 	//
 	skyboxShader.loadShader("shaders/skyboxShader.vert", "shaders/skyboxShader.frag");
@@ -603,7 +679,8 @@ void renderScene() {
 
 		lightCube.Draw(lightShader);
 
-		//
+		//rain
+		renderRain();
 
 		glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
@@ -612,6 +689,8 @@ void renderScene() {
 }
 
 void cleanup() {
+	glDeleteVertexArrays(1, &rainVAO);
+	glDeleteBuffers(1, &rainVBO);
 	glDeleteTextures(1,& depthMapTexture);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDeleteFramebuffers(1, &shadowMapFBO);
@@ -632,6 +711,7 @@ int main(int argc, const char * argv[]) {
 	initShaders();
 	initUniforms();
 	initFBO();
+	initRain();
 
 	glCheckError();
 
