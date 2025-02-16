@@ -113,6 +113,57 @@ const float MIN_FOG = 0.001f;
 const float MAX_FOG = 0.05f;
 const float FOG_STEP = 0.001f;
 
+float animationTime = 0.0f;
+bool isAnimating = false;
+const float ANIMATION_DURATION = 20.0f; // 20 seconds animation
+
+glm::vec3 mix(const glm::vec3& a, const glm::vec3& b, float t) {
+	return a * (1.0f - t) + b * t;
+}
+
+float startTime;
+float totalDuration = 15.0f;
+
+void animateCamera() { 
+	float currentTime = glfwGetTime() - startTime;
+
+	std::vector<glm::vec3> positions = {
+		glm::vec3(387.0f, 93.0f, 382.0f),
+		glm::vec3(7.0f, 10.0f, 70.0f),
+		glm::vec3(7.0f, 10.0f, -70.0f),
+		glm::vec3(155.02f, 80.0f, -206.0f)
+	};
+
+	std::vector<glm::vec3> targets = {
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.2f, -0.08f, -0.49f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(-0.63f, -0.15f, 0.77f)
+	};
+
+	if (currentTime >= totalDuration) {
+		// Set final position and target
+		//                                 st-dr  sus-jos fata-spate
+		myCamera.setCameraPosition(glm::vec3(0.0f, 15.0f, 35.0f));
+		myCamera.setCameraTarget(glm::vec3(0.0f, 0.0f, -5.0f));
+		isAnimating = false;
+		return;
+	}
+
+	float normalizedTime = currentTime / totalDuration;
+	float segmentTime = normalizedTime * 4.0f;
+	int currentIndex = (int)segmentTime;
+	float t = segmentTime - currentIndex;
+
+	int nextIndex = (currentIndex + 1) % 4;
+
+	glm::vec3 newPosition = glm::mix(positions[currentIndex], positions[nextIndex], t);
+	glm::vec3 newTarget = glm::normalize(glm::mix(targets[currentIndex], targets[nextIndex], t));
+
+	myCamera.setCameraPosition(newPosition);
+	myCamera.setCameraTarget(newTarget);
+}
+
 struct RainParticle {
 	glm::vec3 position;
 	glm::vec3 velocity;
@@ -283,6 +334,13 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 		showRain = !showRain;
+
+	if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+		startTime = glfwGetTime();
+		isAnimating = !isAnimating;
+		animationTime = 0.0f;
+		myCamera.setCameraPosition(glm::vec3(0.0f, 2.0f, 5.0f));
+	}
 
 	if (key >= 0 && key < 1024)
 	{
@@ -737,6 +795,13 @@ int main(int argc, const char * argv[]) {
 	while (!glfwWindowShouldClose(glWindow)) {
 		processMovement();
 		renderScene();		
+
+		float currentFrame = glfwGetTime();
+		float deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		if (isAnimating)
+			animateCamera();
 
 		glfwPollEvents();
 		glfwSwapBuffers(glWindow);
