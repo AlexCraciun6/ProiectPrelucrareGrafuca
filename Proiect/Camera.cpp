@@ -36,6 +36,10 @@ namespace gps {
             cameraPosition += speed * cameraUpDirection;
         if (direction == MOVE_DOWN)
             cameraPosition -= speed * cameraUpDirection;
+
+        if (cameraPosition.y < 0.2f) {
+            cameraPosition.y = 0.2f;
+        }
     }
 
     //update the camera internal parameters following a camera rotate event
