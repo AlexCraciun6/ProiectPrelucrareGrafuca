@@ -29,32 +29,60 @@ uniform float fogDensityFactor;
 //showLight
 uniform bool showLight;
 
+in vec3 fragPos;
+// Add these uniforms at the top of your fragment shader
+uniform vec3 spotLightPos;
+uniform vec3 spotLightDir;
+uniform float spotLightCutoff;
+uniform float spotLightOuterCutoff;
+
+uniform mat4 view;
+
 void computeLightComponents()
 {		
-	vec3 cameraPosEye = vec3(0.0f);//in eye coordinates, the viewer is situated at the origin
-	
-	//transform normal
-	vec3 normalEye = normalize(fNormal);	
-	
-	//compute light direction
-	vec3 lightDirN = normalize(lightDir);
-	
-	//compute view direction 
-	vec3 viewDirN = normalize(cameraPosEye - fPosEye.xyz);
+    vec3 cameraPosEye = vec3(0.0f);
+    vec3 normalEye = normalize(fNormal);	
+    vec3 lightDirN = normalize(lightDir);
+    vec3 viewDirN = normalize(cameraPosEye - fPosEye.xyz);
 
-	//if showLight false, the light is turned off
-	vec3 effectiveLightColor = showLight ? lightColor : vec3(0.0);
-		
-	//compute ambient light
-	ambient = ambientStrength * effectiveLightColor;
-	
-	//compute diffuse light
-	diffuse = max(dot(normalEye, lightDirN), 0.0f) * effectiveLightColor;
-	
-	//compute specular light
-	vec3 reflection = reflect(-lightDirN, normalEye);
-	float specCoeff = pow(max(dot(viewDirN, reflection), 0.0f), shininess);
-	specular = specularStrength * specCoeff * effectiveLightColor;
+    // Base light calculation
+    vec3 effectiveLightColor = showLight ? lightColor : vec3(0.0);
+    
+    // Directional light components
+    ambient = ambientStrength * effectiveLightColor;
+    diffuse = max(dot(normalEye, lightDirN), 0.0f) * effectiveLightColor;
+    vec3 reflection = reflect(-lightDirN, normalEye);
+    float specCoeff = pow(max(dot(viewDirN, reflection), 0.0f), shininess);
+    specular = specularStrength * specCoeff * effectiveLightColor;
+
+    // Spotlight calculation
+    if (showLight) {
+        // Transform spotlight vectors to view space
+        vec3 spotLightPosView = vec3(view * vec4(spotLightPos, 1.0));
+        vec3 spotLightDirView = normalize(vec3(view * vec4(spotLightDir, 0.0)));
+        
+        // Calculate light direction from fragment to spotlight
+        vec3 spotLightToFrag = normalize(spotLightPosView - fPosEye.xyz);
+        
+        // Calculate spot light angle
+        float theta = dot(spotLightToFrag, normalize(-spotLightDirView));
+        float epsilon = spotLightCutoff - spotLightOuterCutoff;
+        float intensity = clamp((theta - spotLightOuterCutoff) / epsilon, 0.0, 1.0);
+
+        // Add spotlight contribution if fragment is within the light cone
+        if(theta > spotLightOuterCutoff) 
+        {
+            vec3 spotReflection = reflect(-spotLightToFrag, normalEye);
+            float spotSpecCoeff = pow(max(dot(viewDirN, spotReflection), 0.0f), shininess);
+            
+            // Increase spotlight intensity
+            vec3 spotColor = lightColor * 2.0; // Make spotlight brighter
+            
+            // Add spotlight contribution to existing lighting
+            diffuse += intensity * max(dot(normalEye, spotLightToFrag), 0.0f) * spotColor;
+            specular += intensity * spotSpecCoeff * specularStrength * spotColor;
+        }
+    }
 }
 
 float computeShadow()

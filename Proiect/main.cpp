@@ -86,6 +86,12 @@ GLuint depthMapTexture;
 bool showDepthMap;
 bool showLight = true;
 
+// Spotlight properties
+glm::vec3 spotLightPosition = glm::vec3(12.0f, 8.6f, 8.5f);
+glm::vec3 spotLightDirection = glm::vec3(0.0f, -1.0f, 0.0f); // pointing downward
+float spotLightCutoff = glm::cos(glm::radians(12.5f));
+float spotLightOuterCutoff = glm::cos(glm::radians(17.5f));
+
 // New skybox texture
 GLuint textureID;
 
@@ -588,6 +594,13 @@ void initUniforms() {
 	lightShader.useShaderProgram();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
+	// Add this to your initUniforms() function
+// Spotlight uniforms
+	glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos"), 1, glm::value_ptr(spotLightPosition));
+	glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightDir"), 1, glm::value_ptr(spotLightDirection));
+	glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightCutoff"), spotLightCutoff);
+	glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightOuterCutoff"), spotLightOuterCutoff);
+
 	//fog
 	glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "fogDensityFactor"), fogDensityFactor);
 }
@@ -745,6 +758,11 @@ void renderScene() {
 			GL_FALSE,
 			glm::value_ptr(computeLightSpaceTrMatrix()));
 
+		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos"), 1, glm::value_ptr(spotLightPosition));
+		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightDir"), 1, glm::value_ptr(spotLightDirection));
+		glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightCutoff"), spotLightCutoff);
+		glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightOuterCutoff"), spotLightOuterCutoff);
+
 		drawObjects(myCustomShader, false);
 
 		//fog
@@ -800,7 +818,7 @@ int main(int argc, const char * argv[]) {
 	initFBO();
 	initRain();
 
-	glCheckError();
+	//glCheckError();
 
 	while (!glfwWindowShouldClose(glWindow)) {
 		processMovement();
