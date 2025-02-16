@@ -121,9 +121,23 @@ void main()
 	float shadow = computeShadow();
     //vec3 color = min((ambient + (1.0f - shadow)*diffuse) + (1.0f - shadow)*specular, 1.0f);
     float alpha = texture(diffuseTexture, fTexCoords).a;
-	vec4 color = vec4( min((ambient + (1.0f - shadow) * diffuse) + (1.0f - shadow)*specular, 1.0f), alpha);
 
-	vec4 fogColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);
-	float fogFactor = fog();
-	fColor = mix(color, fogColor, 1.0 - fogFactor);
+
+    // Calculate spotlight contribution
+    vec3 spotLightPosView = vec3(view * vec4(spotLightPos, 1.0));
+    vec3 spotLightDirView = normalize(vec3(view * vec4(spotLightDir, 0.0)));
+    vec3 spotLightToFrag = normalize(spotLightPosView - fPosEye.xyz);
+    float theta = dot(spotLightToFrag, normalize(-spotLightDirView));
+
+    // If fragment is in spotlight cone, don't apply shadows
+    if(showLight && theta > spotLightOuterCutoff) {
+        // No shadows in spotlight area
+        shadow = 0.0f;
+    }
+
+    vec4 color = vec4(min((ambient + (1.0f - shadow) * diffuse) + (1.0f - shadow)*specular, 1.0f), alpha);
+    
+    vec4 fogColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    float fogFactor = fog();
+    fColor = mix(color, fogColor, 1.0 - fogFactor);
 }
