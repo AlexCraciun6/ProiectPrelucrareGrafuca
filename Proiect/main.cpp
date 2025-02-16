@@ -84,6 +84,7 @@ GLuint shadowMapFBO;
 GLuint depthMapTexture;
 
 bool showDepthMap;
+bool showLight = true;
 
 // New skybox texture
 GLuint textureID;
@@ -334,6 +335,10 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
 		showRain = !showRain;
+
+	if (key == GLFW_KEY_2 && action == GLFW_PRESS)
+		showLight = !showLight;
+
 
 	if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
 		startTime = glfwGetTime();
@@ -744,6 +749,9 @@ void renderScene() {
 
 		//fog
 		glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "fogDensityFactor"), fogDensityFactor);
+
+		//showLight
+		glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "showLight"), showLight);
 
 		//draw a white cube around the light
 		lightShader.useShaderProgram();

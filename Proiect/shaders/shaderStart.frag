@@ -26,6 +26,9 @@ float shininess = 32.0f;
 //fog
 uniform float fogDensityFactor;
 
+//showLight
+uniform bool showLight;
+
 void computeLightComponents()
 {		
 	vec3 cameraPosEye = vec3(0.0f);//in eye coordinates, the viewer is situated at the origin
@@ -38,17 +41,20 @@ void computeLightComponents()
 	
 	//compute view direction 
 	vec3 viewDirN = normalize(cameraPosEye - fPosEye.xyz);
+
+	//if showLight false, the light is turned off
+	vec3 effectiveLightColor = showLight ? lightColor : vec3(0.0);
 		
 	//compute ambient light
-	ambient = ambientStrength * lightColor;
+	ambient = ambientStrength * effectiveLightColor;
 	
 	//compute diffuse light
-	diffuse = max(dot(normalEye, lightDirN), 0.0f) * lightColor;
+	diffuse = max(dot(normalEye, lightDirN), 0.0f) * effectiveLightColor;
 	
 	//compute specular light
 	vec3 reflection = reflect(-lightDirN, normalEye);
 	float specCoeff = pow(max(dot(viewDirN, reflection), 0.0f), shininess);
-	specular = specularStrength * specCoeff * lightColor;
+	specular = specularStrength * specCoeff * effectiveLightColor;
 }
 
 float computeShadow()
