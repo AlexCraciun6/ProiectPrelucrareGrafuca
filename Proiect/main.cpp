@@ -62,8 +62,8 @@ gps::Camera myCamera(
 float cameraSpeed = 0.15f;
 
 bool pressedKeys[1024];
-float angleY = 0.0f;
-GLfloat lightAngle;
+float angleY = 0.0f; // for nanosuit
+GLfloat lightAngle; // for light cube
 
 gps::Model3D nanosuit;
 gps::Model3D ground;
@@ -96,6 +96,7 @@ float spotlightInnerAngle = 12.5f;
 float spotlightOuterAngle = 17.5f;
 float spotLightCutoff = glm::cos(glm::radians(spotlightInnerAngle));
 float spotLightOuterCutoff = glm::cos(glm::radians(spotlightOuterAngle));
+
 // New skybox texture
 GLuint textureID;
 
@@ -575,7 +576,7 @@ void initShaders() {
 	rainShader.loadShader("shaders/rainShader.vert", "shaders/rainShader.frag");
 	rainShader.useShaderProgram();
 
-	//
+	//skybox
 	skyboxShader.loadShader("shaders/skyboxShader.vert", "shaders/skyboxShader.frag");
 	skyboxShader.useShaderProgram();
 }
@@ -655,7 +656,7 @@ glm::mat4 computeLightSpaceTrMatrix() {
 	const GLfloat near_plane = -50.0f, far_plane = 50.0f;
 
 	//                                     stanga  dreapta  jos    sus
-	glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -40.0f, 40.0f, near_plane, far_plane);
+	glm::mat4 lightProjection = glm::ortho(-50.0f, 50.0f, -45.0f, 45.0f, near_plane, far_plane);
 
 	glm::mat4 lightSpaceTrMatrix = lightProjection * lightView;
 	return lightSpaceTrMatrix;
