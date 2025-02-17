@@ -59,7 +59,7 @@ gps::Camera myCamera(
 				glm::vec3(0.0f, 2.0f, 5.5f), 
 				glm::vec3(0.0f, 0.0f, 0.0f),
 				glm::vec3(0.0f, 1.0f, 0.0f));
-float cameraSpeed = 0.1f;
+float cameraSpeed = 0.15f;
 
 bool pressedKeys[1024];
 float angleY = 0.0f;
@@ -92,9 +92,10 @@ glm::vec3 spotLightPosition2 = glm::vec3(-17.0f, 8.6f, -12.0f);
 glm::vec3 spotLightPosition3 = glm::vec3(12.0f, 8.6f, -12.0f);
 glm::vec3 spotLightPosition4 = glm::vec3(-16.0f, 8.6f, 8.5f);
 glm::vec3 spotLightDirection = glm::vec3(0.0f, -1.0f, 0.0f); // pointing downward
-float spotLightCutoff = glm::cos(glm::radians(12.5f));
-float spotLightOuterCutoff = glm::cos(glm::radians(17.5f));
-
+float spotlightInnerAngle = 12.5f;
+float spotlightOuterAngle = 17.5f;
+float spotLightCutoff = glm::cos(glm::radians(spotlightInnerAngle));
+float spotLightOuterCutoff = glm::cos(glm::radians(spotlightOuterAngle));
 // New skybox texture
 GLuint textureID;
 
@@ -447,6 +448,21 @@ void processMovement()
 
 	if (pressedKeys[GLFW_KEY_X]) {
 		fogDensityFactor = glm::max(fogDensityFactor - FOG_STEP, MIN_FOG);
+	}
+
+	// Spotlight angle control
+	if (pressedKeys[GLFW_KEY_8]) {
+		spotlightInnerAngle = glm::min(spotlightInnerAngle + 0.5f, 89.0f);
+		spotlightOuterAngle = glm::min(spotlightOuterAngle + 0.5f, 90.0f);
+		spotLightCutoff = glm::cos(glm::radians(spotlightInnerAngle));
+		spotLightOuterCutoff = glm::cos(glm::radians(spotlightOuterAngle));
+	}
+
+	if (pressedKeys[GLFW_KEY_9]) {
+		spotlightInnerAngle = glm::max(spotlightInnerAngle - 0.5f, 1.0f);
+		spotlightOuterAngle = glm::max(spotlightOuterAngle - 0.5f, 2.0f);
+		spotLightCutoff = glm::cos(glm::radians(spotlightInnerAngle));
+		spotLightOuterCutoff = glm::cos(glm::radians(spotlightOuterAngle));
 	}
 }
 
