@@ -88,6 +88,9 @@ bool showLight = true;
 
 // Spotlight properties
 glm::vec3 spotLightPosition = glm::vec3(12.0f, 8.6f, 8.5f);
+glm::vec3 spotLightPosition2 = glm::vec3(-17.0f, 8.6f, -12.0f);
+glm::vec3 spotLightPosition3 = glm::vec3(12.0f, 8.6f, -12.0f);
+glm::vec3 spotLightPosition4 = glm::vec3(-16.0f, 8.6f, 8.5f);
 glm::vec3 spotLightDirection = glm::vec3(0.0f, -1.0f, 0.0f); // pointing downward
 float spotLightCutoff = glm::cos(glm::radians(12.5f));
 float spotLightOuterCutoff = glm::cos(glm::radians(17.5f));
@@ -595,7 +598,7 @@ void initUniforms() {
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 	// Add this to your initUniforms() function
-// Spotlight uniforms
+	// Spotlight uniforms
 	glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos"), 1, glm::value_ptr(spotLightPosition));
 	glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightDir"), 1, glm::value_ptr(spotLightDirection));
 	glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightCutoff"), spotLightCutoff);
@@ -759,6 +762,9 @@ void renderScene() {
 			glm::value_ptr(computeLightSpaceTrMatrix()));
 
 		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos"), 1, glm::value_ptr(spotLightPosition));
+		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos2"), 1, glm::value_ptr(spotLightPosition2));
+		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos3"), 1, glm::value_ptr(spotLightPosition3));
+		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightPos4"), 1, glm::value_ptr(spotLightPosition4));
 		glUniform3fv(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightDir"), 1, glm::value_ptr(spotLightDirection));
 		glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightCutoff"), spotLightCutoff);
 		glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "spotLightOuterCutoff"), spotLightOuterCutoff);

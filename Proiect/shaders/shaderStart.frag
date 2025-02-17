@@ -32,11 +32,32 @@ uniform bool showLight;
 in vec3 fragPos;
 // Add these uniforms at the top of your fragment shader
 uniform vec3 spotLightPos;
+uniform vec3 spotLightPos2;
+uniform vec3 spotLightPos3;
+uniform vec3 spotLightPos4;
 uniform vec3 spotLightDir;
 uniform float spotLightCutoff;
 uniform float spotLightOuterCutoff;
 
 uniform mat4 view;
+
+void processSpotlight(vec3 spotPos, vec3 spotLightDirView, vec3 normalEye, vec3 viewDirN, inout vec3 diffuse, inout vec3 specular) 
+{
+    vec3 spotLightPosView = vec3(view * vec4(spotPos, 1.0));
+    vec3 spotLightToFrag = normalize(spotLightPosView - fPosEye.xyz);
+    float theta = dot(spotLightToFrag, normalize(-spotLightDirView));
+    float epsilon = spotLightCutoff - spotLightOuterCutoff;
+    float intensity = clamp((theta - spotLightOuterCutoff) / epsilon, 0.0, 1.0);
+
+    if(theta > spotLightOuterCutoff) 
+    {
+        vec3 spotReflection = reflect(-spotLightToFrag, normalEye);
+        float spotSpecCoeff = pow(max(dot(viewDirN, spotReflection), 0.0f), shininess);
+        vec3 spotColor = lightColor * 2.0;
+        diffuse += intensity * max(dot(normalEye, spotLightToFrag), 0.0f) * spotColor;
+        specular += intensity * spotSpecCoeff * specularStrength * spotColor;
+    }
+}
 
 void computeLightComponents()
 {		
@@ -55,33 +76,15 @@ void computeLightComponents()
     float specCoeff = pow(max(dot(viewDirN, reflection), 0.0f), shininess);
     specular = specularStrength * specCoeff * effectiveLightColor;
 
-    // Spotlight calculation
+     // Spotlight calculation
     if (showLight) {
-        // Transform spotlight vectors to view space
-        vec3 spotLightPosView = vec3(view * vec4(spotLightPos, 1.0));
         vec3 spotLightDirView = normalize(vec3(view * vec4(spotLightDir, 0.0)));
         
-        // Calculate light direction from fragment to spotlight
-        vec3 spotLightToFrag = normalize(spotLightPosView - fPosEye.xyz);
-        
-        // Calculate spot light angle
-        float theta = dot(spotLightToFrag, normalize(-spotLightDirView));
-        float epsilon = spotLightCutoff - spotLightOuterCutoff;
-        float intensity = clamp((theta - spotLightOuterCutoff) / epsilon, 0.0, 1.0);
-
-        // Add spotlight contribution if fragment is within the light cone
-        if(theta > spotLightOuterCutoff) 
-        {
-            vec3 spotReflection = reflect(-spotLightToFrag, normalEye);
-            float spotSpecCoeff = pow(max(dot(viewDirN, spotReflection), 0.0f), shininess);
-            
-            // Increase spotlight intensity
-            vec3 spotColor = lightColor * 2.0; // Make spotlight brighter
-            
-            // Add spotlight contribution to existing lighting
-            diffuse += intensity * max(dot(normalEye, spotLightToFrag), 0.0f) * spotColor;
-            specular += intensity * spotSpecCoeff * specularStrength * spotColor;
-        }
+        // Process both spotlights using the same logic
+        processSpotlight(spotLightPos, spotLightDirView, normalEye, viewDirN, diffuse, specular);
+        processSpotlight(spotLightPos2, spotLightDirView, normalEye, viewDirN, diffuse, specular);
+        processSpotlight(spotLightPos3, spotLightDirView, normalEye, viewDirN, diffuse, specular);
+        processSpotlight(spotLightPos4, spotLightDirView, normalEye, viewDirN, diffuse, specular);
     }
 }
 
@@ -129,8 +132,20 @@ void main()
     vec3 spotLightToFrag = normalize(spotLightPosView - fPosEye.xyz);
     float theta = dot(spotLightToFrag, normalize(-spotLightDirView));
 
+    vec3 spotLightPosView2 = vec3(view * vec4(spotLightPos2, 1.0));
+    vec3 spotLightToFrag2 = normalize(spotLightPosView2 - fPosEye.xyz);
+    float theta2 = dot(spotLightToFrag2, normalize(-spotLightDirView));
+
+    vec3 spotLightPosView3 = vec3(view * vec4(spotLightPos3, 1.0));
+    vec3 spotLightToFrag3 = normalize(spotLightPosView3 - fPosEye.xyz);
+    float theta3 = dot(spotLightToFrag3, normalize(-spotLightDirView));
+
+    vec3 spotLightPosView4 = vec3(view * vec4(spotLightPos4, 1.0));
+    vec3 spotLightToFrag4 = normalize(spotLightPosView4 - fPosEye.xyz);
+    float theta4 = dot(spotLightToFrag4, normalize(-spotLightDirView));
+
     // If fragment is in spotlight cone, don't apply shadows
-    if(showLight && theta > spotLightOuterCutoff) {
+    if(showLight && (theta > spotLightOuterCutoff || theta2 > spotLightOuterCutoff || theta3 > spotLightOuterCutoff || theta4 > spotLightOuterCutoff)) {
         // No shadows in spotlight area
         shadow = 0.0f;
     }
